@@ -6,7 +6,7 @@
     <!-- remap from="camera_info" to="/camera_h/aligned_depth_to_color/camera_info"/ -->
     <remap from="camera_info" to="/test_depth_cam_info"/>
     <!-- remap from="image_rect" to="/camera_h/aligned_depth_to_color/image_raw"/ -->
-    <remap from="image_rect" to="/Test"/>
+    <remap from="image_rect" to="/glass_edge_depth"/>
     <remap from="points" to="/camera/depth/points"/>
   </node>
 </launch>
