@@ -1,14 +1,11 @@
 <launch>
   <arg name="pc_topic"                default="/camera/depth/points"/>
   <arg name="camera_info"             default="/glass_camera_info"/>
-  <arg name="depth_image"             default="/glass_edge_depth"/>
-  <arg name="node_name"               default="nodelet1"/>
-  <arg name="manage_node_name"        default="nodelet_manager"/>
+  <arg name="depth_image"              default="/floor_depth"/>
 
-  <node pkg="nodelet" type="nodelet" name="$(arg manage_node_name)" args="manager" />
+  <node pkg="nodelet" type="nodelet" name="floor_nodelet_manager" args="manager" />
 
-  <!-- <node pkg="nodelet" type="nodelet" name="nodelet1" -->
-  <node pkg="nodelet" type="nodelet" name="$(arg node_name)"
+  <node pkg="nodelet" type="nodelet" name="floor_nodelet1"
         args="load depth_image_proc/point_cloud_xyz nodelet_manager">
     <remap from="camera_info"   to="$(arg camera_info)"/>
     <remap from="image_rect"    to="$(arg depth_image)"/>

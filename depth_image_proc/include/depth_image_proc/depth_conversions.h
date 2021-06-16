@@ -68,6 +68,9 @@ void convert(
   sensor_msgs::PointCloud2Iterator<float> iter_z(*cloud_msg, "z");
   const T* depth_row = reinterpret_cast<const T*>(&depth_msg->data[0]);
   int row_step = depth_msg->step / sizeof(T);
+
+  std::vector<std::array<float, 3>> pointsVector;
+
   for (int v = 0; v < (int)cloud_msg->height; ++v, depth_row += row_step)
   {
     for (int u = 0; u < (int)cloud_msg->width; ++u, ++iter_x, ++iter_y, ++iter_z)
@@ -87,13 +90,47 @@ void convert(
           continue;
         }
       }
+      std::array<float, 3> point_3d;
 
       // Fill in XYZ
       *iter_x = (u - center_x) * depth * constant_x;
       *iter_y = (v - center_y) * depth * constant_y;
       *iter_z = DepthTraits<T>::toMeters(depth);
+      point_3d = {(u - center_x) * depth * constant_x, (v - center_y) * depth * constant_y, DepthTraits<T>::toMeters(depth)};
+      pointsVector.push_back(point_3d);
     }
   }
+
+  int n_points = pointsVector.size();
+  sensor_msgs::PointCloud2 cloud_msg_2;
+  sensor_msgs::PointCloud2Modifier modifier(cloud_msg_2);
+  modifier.setPointCloud2Fields(3, "x", 1, sensor_msgs::PointField::FLOAT32,
+                                "y", 1, sensor_msgs::PointField::FLOAT32,
+                                "z", 1, sensor_msgs::PointField::FLOAT32);
+  modifier.setPointCloud2FieldsByString(1, "xyz");
+  modifier.resize(n_points);
+
+  sensor_msgs::PointCloud2Iterator<float> iter_x_(cloud_msg_2, "x");
+  sensor_msgs::PointCloud2Iterator<float> iter_y_(cloud_msg_2, "y");
+  sensor_msgs::PointCloud2Iterator<float> iter_z_(cloud_msg_2, "z");
+
+  cloud_msg_2.height = 1;
+  cloud_msg_2.width = n_points;
+  // cloud_msg_2.header.frame_id = cloud_msg->header.frame_id;
+  // cloud_msg_2.header.seq = cloud_msg->header.seq;
+  // cloud_msg_2.header.stamp = cloud_msg->header.stamp;
+
+  for(size_t i=0; i<n_points; ++i, ++iter_x_, ++iter_y_, ++iter_z_){
+      *iter_x_ = pointsVector[i][0];
+      *iter_y_ = pointsVector[i][1];
+      *iter_z_ = pointsVector[i][2];
+
+      // cerr << *iter_x << " " << *iter_y << " " << *iter_z << endl;
+  }
+  cloud_msg->data = cloud_msg_2.data;
+  cloud_msg->height = cloud_msg_2.height;
+  cloud_msg->width = cloud_msg_2.width;
+  cloud_msg->is_dense = true;
 }
 
 } // namespace depth_image_proc
